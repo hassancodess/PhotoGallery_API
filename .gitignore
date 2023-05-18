@@ -3,3 +3,4 @@ fastapi-env
 .DS_Store
 Images/
 fastapienv
+dataset_faces.dat
