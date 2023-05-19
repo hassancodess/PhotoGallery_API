@@ -14,6 +14,8 @@ import glob
 app = FastAPI()
 
 app.mount("/images", StaticFiles(directory="./Images"), name="images")
+app.mount("/faces", StaticFiles(directory="./ImagesCropped"),
+          name="cropped_images")
 
 
 # DB
@@ -48,10 +50,6 @@ async def saveImage(file: UploadFile):
     # send this picture to image recog function to get names
     names_locations = await face_recog_function(filePath)
     return names_locations
-
-
-# @app.post('/updatName')
-# async def updateName():
 
 
 @app.get('/getAllPhotosNames')
@@ -101,5 +99,9 @@ async def updateName(old_names: List[str], new_names: List[str]):
     # Save updated data back to dat file
     with open('dataset_faces.dat', 'wb') as f:
         pickle.dump(data, f)
+
+    for old_name, new_name in zip(old_names, new_names):
+        await rename_cropped_face(old_name, new_name)
+        print('renamed')
 
     return "Done"

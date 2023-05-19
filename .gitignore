@@ -2,5 +2,6 @@ __pycache__
 fastapi-env
 .DS_Store
 Images/
+ImagesCropped/
 fastapienv
 dataset_faces.dat
