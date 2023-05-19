@@ -42,7 +42,7 @@ async def get_names_encodings_of_dataset(all_face_encodings):
 
 async def compare_face_encodings(encoding1, encoding2):
     result = face_recognition.compare_faces(
-        encoding1, encoding2, tolerance=0.55)
+        encoding1, encoding2, tolerance=0.6)
     return result
 
 
@@ -160,7 +160,7 @@ async def crop_and_save_faces(image_path, faces):
         cropped_face = image[top:bottom, left:right]
 
         # Save the cropped face image
-        output_path = os.path.join(image_folder, f"face_{name}.jpg")
+        output_path = os.path.join(image_folder, f"{name}.jpg")
         cv2.imwrite(output_path, cropped_face)
 
 
