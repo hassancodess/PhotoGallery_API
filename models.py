@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import datetime
 from fastapi import UploadFile
 
@@ -43,3 +43,15 @@ class AlbumPhoto(BaseModel):
 class PhotoPerson(BaseModel):
     pid: int
     personid: int
+
+
+class SyncItem(BaseModel):
+    title: str
+    people: List[str]
+    events: List[str]
+    label: str
+    lat:  Union[str, float]
+    lng:  Union[str, float]
+    date_taken: str
+    last_modified_date: str
+    isSynced: int

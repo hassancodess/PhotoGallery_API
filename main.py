@@ -10,6 +10,8 @@ import pyodbc
 from face_recog import *
 from utils import *
 import glob
+import os
+import shutil
 
 app = FastAPI()
 
@@ -50,6 +52,26 @@ async def saveImage(file: UploadFile):
     # send this picture to image recog function to get names
     names_locations = await face_recog_function(filePath)
     return names_locations
+
+
+@app.post('/syncNow')
+async def syncNow(items: List[SyncItem]):
+    for item in items:
+        print('i', item)
+    return "anc"
+    # Source folder path
+    # source_folder = "/Images"
+    # # Destination folder path
+    # destination_folder = "C:\\Users\\Hassan\\Desktop\\Pictures"
+    # # Loop through the list of objects
+    # for obj in items:
+    #     image_name = obj.title
+    #     source_path = os.path.join(source_folder, image_name)
+    #     destination_path = os.path.join(destination_folder, image_name)
+    #     # Check if the image file exists in the source folder
+    #     if os.path.isfile(source_path):
+    #         # Copy the file to the destination folder
+    #         shutil.copyfile(source_path, destination_path)
 
 
 @app.get('/getAllPhotosNames')
