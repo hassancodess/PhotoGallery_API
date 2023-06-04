@@ -43,6 +43,30 @@ async def CHECK_PHOTO(photo_title):
     return None
 
 
+async def CHECK_PHOTOEVENT(photoID, eventID):
+    # Check if the name already exists in the table
+    query = "SELECT COUNT(*) FROM PhotoEvent WHERE photo_id = ? AND event_id = ?"
+    cursor.execute(query, photoID, eventID)
+    row = cursor.fetchone()
+    # print('row', type(row), row)
+    if row is not None:
+        count = row[0]
+        return count
+    return None
+
+
+async def CHECK_PHOTOPERSON(photoID, personID):
+    # Check if the name already exists in the table
+    query = "SELECT COUNT(*) FROM PhotoPerson WHERE photo_id = ? AND person_id = ?"
+    cursor.execute(query, photoID, personID)
+    row = cursor.fetchone()
+    # print('row', type(row), row)
+    if row is not None:
+        count = row[0]
+        return count
+    return None
+
+
 async def INSERT_PHOTO(p: Photo):
     try:
         # Construct the SQL INSERT statement

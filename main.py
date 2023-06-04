@@ -83,9 +83,10 @@ async def syncNow(items: List[SyncItem]):
         # WRITE PHOTO
         count = await CHECK_PHOTO(obj.title)
         date_format = "%m/%d/%Y, %I:%M:%S %p"
-        current_datetime = datetime.now()
-        formatted_date = current_datetime.strftime(date_format)
-        last_modified_datetime = datetime.strptime(formatted_date, date_format)
+        # current_datetime = datetime.now()
+        # formatted_date = current_datetime.strftime(date_format)
+        last_modified_datetime = datetime.strptime(
+            obj.last_modified_date, date_format)
 
         date_taken = datetime.strptime(obj.date_taken, date_format)
 
@@ -117,8 +118,11 @@ async def syncNow(items: List[SyncItem]):
             personID = await GET_PERSON_ID(person)
             print('personID', personID)
 
-            # ADD PHOTO PERSON
-            await INSERT_PHOTOPERSON(photoID, personID)
+            # Check whether PhotoPerson already exists in DB
+            PhotoPerson_Count = await CHECK_PHOTOPERSON(photoID, personID)
+            # Inserts if event NOT in DB
+            if PhotoPerson_Count == 0:
+                await INSERT_PHOTOPERSON(photoID, personID)
 
         # WRITE EVENT
         for event in obj.events:
@@ -127,12 +131,16 @@ async def syncNow(items: List[SyncItem]):
             # Inserts if event NOT in DB
             if count == 0:
                 await INSERT_EVENT(event)
-            # Gets ID OF Person
+
+            # Gets ID OF Event
             eventID = await GET_EVENT_ID(event)
             print('eventID', eventID)
 
-            # ADD PHOTO PERSON
-            await INSERT_PHOTOEVENT(photoID, eventID)
+            # Check whether PhotoPerson already exists in DB
+            PhotoEvent_Count = await CHECK_PHOTOEVENT(photoID, eventID)
+            # Inserts if event NOT in DB
+            if PhotoEvent_Count == 0:
+                await INSERT_PHOTOEVENT(photoID, eventID)
     return "DONE"
 
 
