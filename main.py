@@ -12,6 +12,7 @@ from utils import *
 import glob
 import os
 import shutil
+from datetime import datetime
 
 app = FastAPI()
 
@@ -56,22 +57,83 @@ async def saveImage(file: UploadFile):
 
 @app.post('/syncNow')
 async def syncNow(items: List[SyncItem]):
-    for item in items:
-        print('i', item)
-    return "anc"
+    print('started')
     # Source folder path
-    # source_folder = "/Images"
-    # # Destination folder path
-    # destination_folder = "C:\\Users\\Hassan\\Desktop\\Pictures"
-    # # Loop through the list of objects
-    # for obj in items:
-    #     image_name = obj.title
-    #     source_path = os.path.join(source_folder, image_name)
-    #     destination_path = os.path.join(destination_folder, image_name)
-    #     # Check if the image file exists in the source folder
-    #     if os.path.isfile(source_path):
-    #         # Copy the file to the destination folder
-    #         shutil.copyfile(source_path, destination_path)
+    source_folder = "Images\\"
+    # Destination folder path
+    destination_folder = "C:\\Users\\Hassan\\Desktop\\Pictures"
+    # Loop through the list of objects
+    for obj in items:
+        image_name = obj.title
+        source_path = os.path.join(source_folder, image_name)
+        destination_path = os.path.join(destination_folder, image_name)
+
+        # Check if the image file exists in the source folder
+        print('source path', source_path, 'destination path', destination_path)
+        if os.path.exists(source_path):
+            print('copying')
+            # Copy the file to the destination folder
+            shutil.copyfile(source_path, destination_path)
+        else:
+            print(
+                f"Image '{image_name}' not found in the source folder. Skipping...")
+
+        # WRITING IN DB
+
+        # WRITE PHOTO
+        count = await CHECK_PHOTO(obj.title)
+        date_format = "%m/%d/%Y, %I:%M:%S %p"
+        current_datetime = datetime.now()
+        formatted_date = current_datetime.strftime(date_format)
+        last_modified_datetime = datetime.strptime(formatted_date, date_format)
+
+        date_taken = datetime.strptime(obj.date_taken, date_format)
+
+        if count == 0:
+            p = Photo(
+                id=None,
+                title=obj.title,
+                lat=obj.lat,
+                lng=obj.lng,
+                date_taken=date_taken,
+                last_modified_date=last_modified_datetime,
+                path=destination_path,
+                label=obj.label,
+                isSynced=1,
+            )
+            await INSERT_PHOTO(p)
+            # Gets ID OF Photo
+        photoID = await GET_PHOTO_ID(obj.title)
+        print('photoID', photoID)
+
+        # WRITE PERSON
+        for person in obj.people:
+            # Check whether person already exists in DB
+            count = await CHECK_PERSON(person)
+            # Inserts if person NOT in DB
+            if count == 0:
+                await INSERT_PERSON(person)
+            # Gets ID OF Person
+            personID = await GET_PERSON_ID(person)
+            print('personID', personID)
+
+            # ADD PHOTO PERSON
+            await INSERT_PHOTOPERSON(photoID, personID)
+
+        # WRITE EVENT
+        for event in obj.events:
+            # Check whether person already exists in DB
+            count = await CHECK_EVENT(event)
+            # Inserts if event NOT in DB
+            if count == 0:
+                await INSERT_EVENT(event)
+            # Gets ID OF Person
+            eventID = await GET_EVENT_ID(event)
+            print('eventID', eventID)
+
+            # ADD PHOTO PERSON
+            await INSERT_PHOTOEVENT(photoID, eventID)
+    return "DONE"
 
 
 @app.get('/getAllPhotosNames')

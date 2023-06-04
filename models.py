@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import Dict, List, Optional, Union
 import datetime
 from fastapi import UploadFile
+from datetime import datetime
 
 
 class Album(BaseModel):
@@ -17,12 +18,23 @@ class Person(BaseModel):
 class Photo(BaseModel):
     id: Optional[int]
     title: str
-    event: Optional[str]
     lat: Optional[float]
     lng: Optional[float]
-    path: Optional[str]
-    date_taken: datetime.datetime
-    last_modified_date: datetime.datetime
+    path: str
+    date_taken: datetime
+    last_modified_date: datetime
+    label: str
+    isSynced: int
+
+# class Photo(BaseModel):
+#     id: Optional[int]
+#     title: str
+#     event: Optional[str]
+#     lat: Optional[float]
+#     lng: Optional[float]
+#     path: Optional[str]
+#     date_taken: datetime.datetime
+#     last_modified_date: datetime.datetime
 
 
 class PhotoList(BaseModel):
@@ -50,8 +62,8 @@ class SyncItem(BaseModel):
     people: List[str]
     events: List[str]
     label: str
-    lat:  Union[str, float]
-    lng:  Union[str, float]
+    lat: Optional[float]
+    lng: Optional[float]
     date_taken: str
     last_modified_date: str
     isSynced: int
