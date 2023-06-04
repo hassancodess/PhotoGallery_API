@@ -69,17 +69,20 @@ async def syncNow(items: List[SyncItem]):
         destination_path = os.path.join(destination_folder, image_name)
 
         # Check if the image file exists in the source folder
-        print('source path', source_path, 'destination path', destination_path)
+        # print('source path', source_path, 'destination path', destination_path)
         if os.path.exists(source_path):
-            print('copying')
-            # Copy the file to the destination folder
-            shutil.copyfile(source_path, destination_path)
+            # Check if the image file already exists in the destination folder
+            if not os.path.exists(destination_path):
+                # Copy the file to the destination folder
+                shutil.copyfile(source_path, destination_path)
+                print('File copied successfully')
+            else:
+                print('File already exists in destination folder')
         else:
             print(
                 f"Image '{image_name}' not found in the source folder. Skipping...")
 
         # WRITING IN DB
-
         # WRITE PHOTO
         count = await CHECK_PHOTO(obj.title)
         date_format = "%m/%d/%Y, %I:%M:%S %p"
@@ -105,7 +108,7 @@ async def syncNow(items: List[SyncItem]):
             await INSERT_PHOTO(p)
             # Gets ID OF Photo
         photoID = await GET_PHOTO_ID(obj.title)
-        print('photoID', photoID)
+        # print('photoID', photoID)
 
         # WRITE PERSON
         for person in obj.people:
@@ -116,7 +119,7 @@ async def syncNow(items: List[SyncItem]):
                 await INSERT_PERSON(person)
             # Gets ID OF Person
             personID = await GET_PERSON_ID(person)
-            print('personID', personID)
+            # print('personID', personID)
 
             # Check whether PhotoPerson already exists in DB
             PhotoPerson_Count = await CHECK_PHOTOPERSON(photoID, personID)
@@ -134,7 +137,7 @@ async def syncNow(items: List[SyncItem]):
 
             # Gets ID OF Event
             eventID = await GET_EVENT_ID(event)
-            print('eventID', eventID)
+            # print('eventID', eventID)
 
             # Check whether PhotoPerson already exists in DB
             PhotoEvent_Count = await CHECK_PHOTOEVENT(photoID, eventID)
