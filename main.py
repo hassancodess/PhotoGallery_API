@@ -2,13 +2,14 @@ import os
 import shutil
 from fastapi import FastAPI, UploadFile, File, Query, Path, Form, Depends, Body
 from fastapi.staticfiles import StaticFiles
-
+from pathlib import Path
+from helpers import *
 from models import *
 from typing import List
 from pydantic import Required
 import pyodbc
 from face_recog import *
-from utils import *
+from database import *
 import glob
 import os
 import shutil
@@ -61,7 +62,16 @@ async def syncNow(items: List[SyncItem]):
     # Source folder path
     source_folder = "Images\\"
     # Destination folder path
-    destination_folder = "C:\\Users\\Hassan\\Desktop\\Pictures"
+    destination_folder = Path.home() / "Desktop" / "Pictures"
+    # destination_folder = "C:\\Users\\Hassan\\Desktop\\Pictures"
+
+    # Creates Pictures Folder if not exists
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+        print("Directory created successfully.")
+    else:
+        print("Directory already exists.")
+
     # Loop through the list of objects
     for obj in items:
         image_name = obj.title
@@ -85,15 +95,14 @@ async def syncNow(items: List[SyncItem]):
         # WRITING IN DB
         # WRITE PHOTO
         count = await CHECK_PHOTO(obj.title)
-        date_format = "%m/%d/%Y, %I:%M:%S %p"
-        # current_datetime = datetime.now()
-        # formatted_date = current_datetime.strftime(date_format)
-        last_modified_datetime = datetime.strptime(
-            obj.last_modified_date, date_format)
-
-        date_taken = datetime.strptime(obj.date_taken, date_format)
-
+        # PHOTO NOT PRESENT IN SQL
         if count == 0:
+            # Date Taken & Last Modified Date
+            date_format = "%m/%d/%Y, %I:%M:%S %p"
+            last_modified_datetime = datetime.strptime(
+                obj.last_modified_date, date_format)
+            date_taken = datetime.strptime(obj.date_taken, date_format)
+
             p = Photo(
                 id=None,
                 title=obj.title,
@@ -105,46 +114,65 @@ async def syncNow(items: List[SyncItem]):
                 label=obj.label,
                 isSynced=1,
             )
-            await INSERT_PHOTO(p)
-            # Gets ID OF Photo
-        photoID = await GET_PHOTO_ID(obj.title)
-        # print('photoID', photoID)
+            # WRITE PHOTO
+            photoID = await handle_photo(p)
+            # WRITE PERSON
+            for person in obj.people:
+                await handle_person(person, photoID)
+            # WRITE EVENT
+            for event in obj.events:
+                await handle_event(event, photoID)
+        # PHOTO PRESENT IN SQL
+        else:
+            # print('asd')
+            # print('PHOTO', obj.title)
+            photo = await FETCH_PHOTO_BY_NAME(obj.title)
+            if photo is not None:
+                # Convert string to datetime object
+                date_object = datetime.strptime(
+                    obj.last_modified_date, "%m/%d/%Y, %I:%M:%S %p")
+                # Convert datetime object to desired format
+                phone_date = date_object.strftime("%Y-%m-%d %H:%M:%S")
+                windows_date = photo[6].strftime("%Y-%m-%d %H:%M:%S")
 
-        # WRITE PERSON
-        for person in obj.people:
-            # Check whether person already exists in DB
-            count = await CHECK_PERSON(person)
-            # Inserts if person NOT in DB
-            if count == 0:
-                await INSERT_PERSON(person)
-            # Gets ID OF Person
-            personID = await GET_PERSON_ID(person)
-            # print('personID', personID)
+                print("last-modified-date", phone_date)
+                print("Last Modified Date", windows_date)
+                if phone_date > windows_date:
+                    print("Phone Date is latest")
+                    await handle_remove_photo_data(obj)
+                    await handle_add_photo_data(obj)
+                    await update_photo_data(obj)
+                else:
+                    print("Windows Date is Latest, Nothing gonna happen")
+    response_to_send = []
+    # Return all the unsynced photos
+    photos = await FETCH_PHOTOS()
+    for photo in photos:
+        # PERSONS
+        persons = await FETCH_PERSONS_IN_PHOTO(photo.id)
+        personsArray = []
+        for person in persons:
+            personsArray.append(person.name)
 
-            # Check whether PhotoPerson already exists in DB
-            PhotoPerson_Count = await CHECK_PHOTOPERSON(photoID, personID)
-            # Inserts if event NOT in DB
-            if PhotoPerson_Count == 0:
-                await INSERT_PHOTOPERSON(photoID, personID)
+        # EVENTS
+        events = await FETCH_EVENTS_IN_PHOTO(photo.id)
+        eventsArray = []
+        for event in events:
+            eventsArray.append(event.name)
 
-        # WRITE EVENT
-        for event in obj.events:
-            # Check whether person already exists in DB
-            count = await CHECK_EVENT(event)
-            # Inserts if event NOT in DB
-            if count == 0:
-                await INSERT_EVENT(event)
-
-            # Gets ID OF Event
-            eventID = await GET_EVENT_ID(event)
-            # print('eventID', eventID)
-
-            # Check whether PhotoPerson already exists in DB
-            PhotoEvent_Count = await CHECK_PHOTOEVENT(photoID, eventID)
-            # Inserts if event NOT in DB
-            if PhotoEvent_Count == 0:
-                await INSERT_PHOTOEVENT(photoID, eventID)
-    return "DONE"
+        # Response Object
+        item = SyncItem(title=photo.title,
+                        people=personsArray,
+                        events=eventsArray,
+                        label=photo.label,
+                        lat=photo.lat,
+                        lng=photo.lng,
+                        date_taken=str(photo.date_taken),
+                        last_modified_date=str(photo.last_modified_date),
+                        isSynced=photo.isSynced,
+                        )
+        response_to_send.append(item)
+    return response_to_send
 
 
 @app.get('/getAllPhotosNames')

@@ -9,6 +9,55 @@ conn = pyodbc.connect(constr)
 cursor = conn.cursor()
 
 
+async def FETCH_PHOTOS():
+    query = "SELECT * FROM Photo"
+    cursor.execute(query)
+    data = cursor.fetchall()
+    photos = []
+    for i in data:
+        photos.append(i)
+    return photos
+
+
+async def FETCH_PHOTO_BY_NAME(name):
+    query = f"SELECT * FROM Photo WHERE title = '{name}'"
+    cursor.execute(query)
+    row = cursor.fetchone()
+    if row is not None:
+        return row
+    return None
+
+
+async def FETCH_UNSYNCED_PHOTOS():
+    query = "SELECT * FROM Photo WHERE isSynced = 0"
+    cursor.execute(query)
+    data = cursor.fetchall()
+    photos = []
+    for i in data:
+        photos.append(i)
+    return photos
+
+
+async def FETCH_PERSONS_IN_PHOTO(photo_id):
+    query = f"SELECT * FROM Person INNER JOIN PhotoPerson ON Person.id = PhotoPerson.person_id WHERE photo_id = {photo_id}"
+    cursor.execute(query)
+    data = cursor.fetchall()
+    people = []
+    for i in data:
+        people.append(i)
+    return people
+
+
+async def FETCH_EVENTS_IN_PHOTO(event_id):
+    query = f"SELECT * FROM Event INNER JOIN PhotoEvent ON Event.id = PhotoEvent.event_id WHERE event_id = {event_id}"
+    cursor.execute(query)
+    data = cursor.fetchall()
+    events = []
+    for i in data:
+        events.append(i)
+    return events
+
+
 async def CHECK_PERSON(person_name):
     # Check if the name already exists in the table
     query = "SELECT COUNT(*) FROM Person WHERE name = ?"
@@ -162,6 +211,7 @@ async def GET_PERSON_ID(person_name):
         row = cursor.fetchone()
         if row is not None:
             return row[0]
+        return None
     except pyodbc.Error as e:
         print("Error INSERT_PERSON:", e)
 
@@ -176,6 +226,7 @@ async def GET_EVENT_ID(event_name):
         row = cursor.fetchone()
         if row is not None:
             return row[0]
+        return None
     except pyodbc.Error as e:
         print("Error GET_EVENT_ID:", e)
 
@@ -269,3 +320,129 @@ async def getRecentAlbumIDs(count: int):
         ids.append(i[0])
     print(ids)
     return ids
+
+
+async def CHECK_EVENT_COUNT(eventID):
+    try:
+        # Check if the name already exists in the table
+        query = "SELECT COUNT(*) FROM PhotoEvent WHERE event_id = ?"
+        cursor.execute(query, eventID)
+        row = cursor.fetchone()
+        # print('row', type(row), row)
+        if row is not None:
+            count = row[0]
+            return count
+        return None
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def CHECK_PERSON_COUNT(personID):
+    try:
+        # Check if the name already exists in the table
+        query = "SELECT COUNT(*) FROM PhotoPerson WHERE person_id = ?"
+        cursor.execute(query, personID)
+        row = cursor.fetchone()
+        # print('row', type(row), row)
+        if row is not None:
+            count = row[0]
+            return count
+        return None
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def REMOVE_EVENT(event_name):
+    try:
+        query = f"DELETE FROM Event where name = {event_name}"
+        cursor.execute(query)
+        conn.commit()
+        return f"Event Deleted - {event_name}"
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def REMOVE_PERSON(person_name):
+    try:
+        query = f"DELETE FROM Person where name = {person_name}"
+        cursor.execute(query)
+        conn.commit()
+        return f"Person Deleted - {person_name}"
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def REMOVE_PHOTO_EVENT(id):
+    try:
+        query = f"DELETE FROM PhotoEvent where photo_id = {id}"
+        cursor.execute(query)
+        conn.commit()
+        return f"PhotoEvent Deleted for photo-id-{id}"
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def REMOVE_PHOTO_PERSON(id):
+    try:
+        query = f"DELETE FROM PhotoPerson where photo_id = {id}"
+        cursor.execute(query)
+        conn.commit()
+        return f"PhotoPerson Deleted for photo-id-{id}"
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def UPDATE_PHOTO_LABEL(label, photo_id):
+    try:
+        query = f"UPDATE Photo SET label = '{label}' WHERE id = {photo_id}"
+        cursor.execute(query)
+        conn.commit()
+        print(f"Photo label updated for photo-id-{photo_id}")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def UPDATE_PHOTO_LOCATION(lat, lng,  photo_id):
+    try:
+        query = f"UPDATE Photo SET lat = {lat}, lng = {lng} WHERE id = {photo_id}"
+        cursor.execute(query)
+        conn.commit()
+        print(f"Photo location updated for photo-id-{photo_id}")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def UPDATE_LAST_MODIFIED_DATE(photo_id, last_modified_date):
+    try:
+        query = f"UPDATE Photo SET last_modified_date = ? WHERE id = {photo_id}"
+        cursor.execute(query, last_modified_date)
+        conn.commit()
+        print(f"last modified date updated for photo-id-{photo_id}")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def GET_EVENTS_OF_PHOTO(photo_id):
+    try:
+        query = f"SELECT Event.* FROM PhotoEvent INNER JOIN Event ON PhotoEvent.event_id = Event.id WHERE PhotoEvent.photo_id = {photo_id}"
+        cursor.execute(query)
+        data = cursor.fetchall()
+        names = []
+        for i in data:
+            names.append(i)
+        return names
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
+async def GET_PERSONS_IN_PHOTO(photo_id):
+    try:
+        query = f"SELECT Person.* FROM PhotoPerson INNER JOIN Person ON PhotoPerson.person_id = Person.id WHERE PhotoPerson.photo_id = {photo_id}"
+        cursor.execute(query)
+        data = cursor.fetchall()
+        names = []
+        for i in data:
+            names.append(i)
+        return names
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
