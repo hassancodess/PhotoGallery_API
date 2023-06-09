@@ -82,7 +82,7 @@ async def handle_add_photo_data(item: SyncItem):
         if personID is not None:
             await INSERT_PHOTOPERSON(photoID, personID)
         else:
-            await INSERT_EVENT(p)
+            await INSERT_PERSON(p)
             p_id = await GET_PERSON_ID(p)
             await INSERT_PHOTOPERSON(photoID, p_id)
 
