@@ -133,10 +133,14 @@ async def syncNow(items: List[SyncItem]):
         else:
             photo = await FETCH_PHOTO_BY_NAME(obj.title)
             if photo is not None:
+                print('last modified date', obj.last_modified_date,
+                      type(obj.last_modified_date))
                 input_format = "%Y:%m:%d %H:%M:%S"
                 # Parse the input date into a datetime object
                 phone_date = datetime.strptime(
                     obj.last_modified_date, input_format)
+                print('phone date', phone_date,
+                      type(phone_date))
                 # windows_date = datetime.strptime(photo[6], input_format)
                 # windows_date = photo[6].strftime("%Y-%m-%d %H:%M:%S")
                 windows_date = photo[6]
@@ -165,6 +169,15 @@ async def syncNow(items: List[SyncItem]):
         for event in events:
             eventsArray.append(event.name)
 
+        # Date
+        datetime_obj = datetime.strptime(
+            str(photo.date_taken), '%Y-%m-%d %H:%M:%S')
+        formatted_date_taken = datetime_obj.strftime('%Y:%m:%d %H:%M:%S')
+
+        dt_obj = datetime.strptime(
+            str(photo.last_modified_date), '%Y-%m-%d %H:%M:%S')
+        formatted_last_modified_date = dt_obj.strftime('%Y:%m:%d %H:%M:%S')
+
         # Response Object
         item = SyncItem(title=photo.title,
                         people=personsArray,
@@ -172,8 +185,8 @@ async def syncNow(items: List[SyncItem]):
                         label=photo.label,
                         lat=photo.lat,
                         lng=photo.lng,
-                        date_taken=str(photo.date_taken),
-                        last_modified_date=str(photo.last_modified_date),
+                        date_taken=formatted_date_taken,
+                        last_modified_date=formatted_last_modified_date,
                         isSynced=photo.isSynced,
                         )
         response_to_send.append(item)
