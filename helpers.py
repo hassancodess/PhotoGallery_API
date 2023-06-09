@@ -65,9 +65,6 @@ async def handle_remove_photo_data(item: SyncItem):
             if p_count == 0:
                 await REMOVE_PERSON(person_name=person[1])
 
-    # Remove Event if length = 0
-    # event_count = CHECK_
-
 
 async def handle_add_photo_data(item: SyncItem):
     photoID = await GET_PHOTO_ID(item.title)
@@ -106,3 +103,7 @@ async def update_photo_data(photo: SyncItem):
     await UPDATE_LAST_MODIFIED_DATE(photoID, formatted_datetime)
     # Update Lat Lng
     await UPDATE_PHOTO_LOCATION(photo.lat, photo.lng, photoID)
+
+
+async def handle_isSynced_status():
+    await UPDATE_PHOTOS_ISSYNCED()

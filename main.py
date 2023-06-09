@@ -150,7 +150,8 @@ async def syncNow(items: List[SyncItem]):
                 else:
                     print("Windows Date is Latest, Nothing gonna happen")
     response_to_send = []
-    # Return all the unsynced photos
+    await handle_isSynced_status()
+    # Return all the photos
     photos = await FETCH_PHOTOS()
     for photo in photos:
         # PERSONS

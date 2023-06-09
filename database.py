@@ -422,6 +422,16 @@ async def UPDATE_LAST_MODIFIED_DATE(photo_id, last_modified_date):
         print(f"An error occurred: {str(e)}")
 
 
+async def UPDATE_PHOTOS_ISSYNCED():
+    try:
+        query = f"UPDATE Photo SET isSynced = 1 WHERE isSynced = 0"
+        cursor.execute(query)
+        conn.commit()
+        print(f"isSynced updated for 0 status")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
 async def GET_EVENTS_OF_PHOTO(photo_id):
     try:
         query = f"SELECT Event.* FROM PhotoEvent INNER JOIN Event ON PhotoEvent.event_id = Event.id WHERE PhotoEvent.photo_id = {photo_id}"
