@@ -409,7 +409,7 @@ async def UPDATE_PHOTO_LOCATION(lat, lng,  photo_id):
         conn.commit()
         print(f"Photo location updated for photo-id-{photo_id}")
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"UPDATE_PHOTO_LOCATION: {str(e)}")
 
 
 async def UPDATE_LAST_MODIFIED_DATE(photo_id, last_modified_date):

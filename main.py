@@ -98,10 +98,17 @@ async def syncNow(items: List[SyncItem]):
         # PHOTO NOT PRESENT IN SQL
         if count == 0:
             # Date Taken & Last Modified Date
-            date_format = "%m/%d/%Y, %I:%M:%S %p"
+            # date_format = "%m/%d/%Y, %I:%M:%S %p"
+            # last_modified_datetime = datetime.strptime(
+            #     obj.last_modified_date, date_format)
+            # date_taken = datetime.strptime(obj.date_taken, date_format)
+
+            # Define the format of the input date
+            input_format = "%Y:%m:%d %H:%M:%S"
+            # Parse the input date into a datetime object
+            date_taken = datetime.strptime(obj.date_taken, input_format)
             last_modified_datetime = datetime.strptime(
-                obj.last_modified_date, date_format)
-            date_taken = datetime.strptime(obj.date_taken, date_format)
+                obj.last_modified_date, input_format)
 
             p = Photo(
                 id=None,
@@ -124,19 +131,17 @@ async def syncNow(items: List[SyncItem]):
                 await handle_event(event, photoID)
         # PHOTO PRESENT IN SQL
         else:
-            # print('asd')
-            # print('PHOTO', obj.title)
             photo = await FETCH_PHOTO_BY_NAME(obj.title)
             if photo is not None:
-                # Convert string to datetime object
-                date_object = datetime.strptime(
-                    obj.last_modified_date, "%m/%d/%Y, %I:%M:%S %p")
-                # Convert datetime object to desired format
-                phone_date = date_object.strftime("%Y-%m-%d %H:%M:%S")
-                windows_date = photo[6].strftime("%Y-%m-%d %H:%M:%S")
-
-                print("last-modified-date", phone_date)
-                print("Last Modified Date", windows_date)
+                input_format = "%Y:%m:%d %H:%M:%S"
+                # Parse the input date into a datetime object
+                phone_date = datetime.strptime(
+                    obj.last_modified_date, input_format)
+                # windows_date = datetime.strptime(photo[6], input_format)
+                # windows_date = photo[6].strftime("%Y-%m-%d %H:%M:%S")
+                windows_date = photo[6]
+                print("Phone Date", phone_date)
+                print("Windows Date", windows_date)
                 if phone_date > windows_date:
                     print("Phone Date is latest")
                     await handle_remove_photo_data(obj)

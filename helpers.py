@@ -96,8 +96,11 @@ async def update_photo_data(photo: SyncItem):
     await UPDATE_PHOTO_LABEL(photo.label, photoID)
     # Update Last Modified Date
     # Convert string to datetime object
+    # Parse the input date into a datetime object
     datetime_obj = datetime.strptime(
-        photo.last_modified_date, "%m/%d/%Y, %I:%M:%S %p")
+        photo.last_modified_date, "%Y:%m:%d %H:%M:%S")
+    # datetime_obj = datetime.strptime(
+    #     photo.last_modified_date, "%m/%d/%Y, %I:%M:%S %p")
     # Format the datetime object as "YYYY-MM-DD HH:MM:SS"
     formatted_datetime = datetime_obj.strftime("%Y-%m-%d %H:%M:%S")
     await UPDATE_LAST_MODIFIED_DATE(photoID, formatted_datetime)
